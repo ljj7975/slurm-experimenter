@@ -1,0 +1,20 @@
+[
+    {
+        "static": {
+            "account": "def-jimmylin",
+            "time_limit": "0-01:00:00",
+            "gpu_type": "v100",
+            "num_gpu": "1",
+            "cpus-per-task": "4",
+            "mem": "32G"
+        },
+        "cross": {
+            "seed": [11, 21],
+            "model": ["base", "large"]
+        },
+        "linear": {
+            "learning_rate": [1, 2],
+            "datasets": ["a", "b"]
+        }
+    }
+]
