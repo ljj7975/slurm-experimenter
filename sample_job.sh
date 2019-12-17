@@ -1,7 +1,10 @@
 MODEL=$1
 LR=$2
-SEED=$3
+DATASET=$3
+SEED=$4
 
 echo "MODEL: "$MODEL
-echo "MODEL: "$LR
-echo "MODEL: "$SEED
+echo "LR: "$LR
+echo "DATASET: "$DATASET
+echo "SEED: "$SEED
+

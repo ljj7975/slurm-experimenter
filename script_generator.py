@@ -2,6 +2,7 @@ import argparse
 from utils import load_json, ensure_dir
 from pprint import pprint
 
+import os
 import re
 import copy
 
@@ -18,12 +19,40 @@ def get_next_combination(comb, base):
 
     return next_comb
 
-def generate_script(config, template):
-    regex = "\{[\w\d_.-]+\}"
+def generate_script(config, template, output_file_name):
 
+    generated_script = []
+    pattern = r"{([\w]+)}"
+    for line in template:
+        matches = re.findall(pattern, line)
+
+        for match in matches:
+
+            if match == "OUTPUT_FILE_NAME":
+                sub_pattern = r"{OUTPUT_FILE_NAME}"
+                target = output_file_name
+            else:
+                sub_pattern = r"{"+match+"}"
+                target = config[match]
+
+            line = re.sub(sub_pattern, target, line)
+
+        generated_script.append(line)
+
+    print('from')
     pprint(config)
 
+    print('to')
+    pprint(generated_script)
+
+    print('------------------------------')
+
 def generate_all_scripts(config, template):
+
+    # generate foldre
+    output_dir = os.path.join(config.generated_script, config["output_file_prefix"])
+    ensure_dir(output_dir)
+
     cross_configs = config['cross']
     linear_configs = config['linear']
     static_configs = config['static']
@@ -55,17 +84,23 @@ def generate_all_scripts(config, template):
     params = copy.deepcopy(static_configs)
     # for each of the cross variable combination
     while sum(cross_ind) > 0:
+        output_file_prefix = config["output_file_prefix"]
+
         cross_ind = get_next_combination(cross_ind, cross_base)
 
         for var_ind, cross_var in enumerate(cross_vars):
-            params[cross_var] = cross_configs[cross_var][cross_ind[var_ind]]
+            params[cross_var] = str(cross_configs[cross_var][cross_ind[var_ind]])
+
+            output_file_prefix += "_" + str(params[cross_var])
 
         # for each of the linear variable combination
         for var_ind in range(linear_var_size):
             for linear_key, linear_val in linear_configs.items():
-                params[linear_key] = linear_val[var_ind]
+                params[linear_key] = str(linear_val[var_ind])
 
-            generate_script(params, template)
+            output_file_name = output_file_prefix + "_" + str(var_ind) + ".out"
+
+            generate_script(params, template, output_file_name)
             count += 1
 
     print(f"total number of combination: {count}")
@@ -86,7 +121,6 @@ def main(args):
         generate_all_scripts(config, template)
 
 
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -96,6 +130,9 @@ if __name__ == "__main__":
 
     parser.add_argument('--script_template', required=True, type=str,
                       help='path to script template')
+
+    parser.add_argument('--output_dir', default="scripts", type=str,
+                      help='path to the generated_script')
 
     args = parser.parse_args()
 
